@@ -1,0 +1,37 @@
+{
+  "name": "twitter-topic-stream",
+  "description": "Twitter Topic Stream",
+  "version": "1.0.0",
+  "private": true,
+  "homepage": "http://twitter-topic-stream.iliyan-trifonov.com",
+  "author": {
+    "name": "Iliyan Trifonov",
+    "email": "iliyan.trifonov@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git:github.com/iliyan-trifonov/twitter-topic-stream.git"
+  },
+  "bugs": {
+    "url": ""
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "/blob/master/LICENSE"
+    }
+  ],
+  "main": "src",
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "grunt test"
+  },
+  "devDependencies": {
+  },
+  "dependencies": {
+  },
+  "keywords": []
+}
