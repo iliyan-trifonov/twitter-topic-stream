@@ -1,24 +1,29 @@
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+    display: none !important;
+}
+
 div.tweet {
     border: 1px dashed #000000;
     width: 300px;
-    height: 150px;
+    height: 180px;
     float: left;
     margin-right: 10px;
     margin-bottom: 10px;
     overflow: hidden;
-    -webkit-animation: animate 2s;
-    animation: animate 2s;
+    background-color: inherit;
 }
 
-@-webkit-keyframes animate {
-    50%   { background-color: yellow }
-    100% { background-color: inherit }
-}
-@keyframes animate {
-    50%   { background-color: yellow }
-    100% { background-color: inherit }
+div.tweet.ng-enter {
+    -webkit-transition: 1s;
+    transition: 1s;
+    background-color: yellow;
 }
 
-[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
-  display: none !important;
+div.tweet.ng-enter-active {
+    background-color: inherit;
+}
+
+div.tweet img {
+    float: left;
+    margin-right: 5px;
 }

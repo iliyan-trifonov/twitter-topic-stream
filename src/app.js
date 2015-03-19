@@ -33,18 +33,40 @@ var T = new Twit({
     access_token_secret: "V21qUsOoxHC7uVtjGpRgFxDPtQVcI5gIMIOtueZP4gqOe"
 });
 
-var stream = T.stream("statuses/filter", { track: "playstation" });
+var stream = T.stream("statuses/filter", { track: "linux" });
 
 stream.on("tweet", function (tweet) {
     var result = {
-        "timestamp": new Date(tweet.created_at).getTime(),
+        "id": tweet.id_str,
         "date": moment(tweet.created_at).format("DD.MM.YYYY HH:mm:ss"),
         "text": tweet.text,
         "source": tweet.source,
         "user": {
             "name": tweet.user.name,
-            "screen_name": tweet.user.screen_name
-        }
+            "screen_name": tweet.user.screen_name,
+            "avatar": tweet.user.profile_image_url
+        },
+        "url": "https://twitter.com/statuses/" + tweet.id_str
     };
     io.emit('tweet', result);
 });
+
+//debug
+/*io.sockets.on('connection', function (socket) {
+    socket.join('timer');
+});
+
+setInterval(function () {
+    var time = +new Date().getTime();
+    var result = {
+        "timestamp": time,
+        "date": moment(time).format("DD.MM.YYYY HH:mm:ss"),
+        "text": "blah-blah!" + time,
+        "source": "asdas dada",
+        "user": {
+            "name": "iliyan" + Math.floor((Math.random() * 1000) + 1),
+            "screen_name": "iliyancho" + Math.floor((Math.random() * 1000) + 1)
+        }
+    };
+    io.sockets.in('timer').emit('tweet', result);
+}, 1E3);*/

@@ -3,7 +3,8 @@
 
     angular.module("TwitterTopicStream.controllers", [
         "TwitterTopicStream.services",
-        "ngSanitize"
+        "ngSanitize",
+        "ngAnimate"
     ])
     .controller("IndexCtrl", [
         '$scope', 'mySocket',
