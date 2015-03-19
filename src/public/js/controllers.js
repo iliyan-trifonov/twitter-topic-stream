@@ -6,14 +6,14 @@
         "ngSanitize"
     ])
     .controller("IndexCtrl", [
-        '$scope', 'Api',
-        function ($scope, Api) {
+        '$scope', 'mySocket',
+        function ($scope, mySocket) {
             $scope.tweets = [];
 
-            Api.tweets.list()
-                .success(function (tweets) {
-                    $scope.tweets = tweets;
-                });
+            $scope.$on("socket:tweet", function (ev, data) {
+                $scope.tweets.push(data);
+                $scope.$apply();
+            });
         }
     ]);
 
