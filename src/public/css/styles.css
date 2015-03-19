@@ -1,0 +1,24 @@
+div.tweet {
+    border: 1px dashed #000000;
+    width: 300px;
+    height: 150px;
+    float: left;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    -webkit-animation: animate 2s;
+    animation: animate 2s;
+}
+
+@-webkit-keyframes animate {
+    50%   { background-color: yellow }
+    100% { background-color: inherit }
+}
+@keyframes animate {
+    50%   { background-color: yellow }
+    100% { background-color: inherit }
+}
+
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+  display: none !important;
+}

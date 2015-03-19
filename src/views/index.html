@@ -1,17 +1,20 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>Twitter Stream Topic</title>
+        <title>Twitter Topic Stream</title>
+        <link rel="stylesheet" href="/css/styles.css">
     </head>
     <body ng-app="TwitterTopicStream">
 
         <div ng-controller="IndexCtrl">
-            <div ng-repeat="tweet in tweets | orderBy: '-date'">
+            <div ng-repeat="tweet in tweets | orderBy: '-timestamp'"
+                 ng-cloak
+                 class="tweet ng-cloak"
+            >
                 Created at: <span ng-bind="tweet.date"></span><br/>
                 Text: <span ng-bind="tweet.text"></span><br/>
                 Source: <span ng-bind-html="tweet.source"></span><br/>
                 User: <span>{{tweet.user.name}}({{tweet.user.screen_name}})</span>
-                <br/><br/>
             </div>
         </div>
 

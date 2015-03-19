@@ -2,7 +2,8 @@
 
 var express = require('express'),
     routes = require("./routes"),
-    path = require("path");
+    path = require("path"),
+    moment = require("moment");
 
 var app = express();
 
@@ -32,11 +33,12 @@ var T = new Twit({
     access_token_secret: "V21qUsOoxHC7uVtjGpRgFxDPtQVcI5gIMIOtueZP4gqOe"
 });
 
-var stream = T.stream("statuses/filter", { track: "Bulgaria" });
+var stream = T.stream("statuses/filter", { track: "playstation" });
 
 stream.on("tweet", function (tweet) {
     var result = {
-        "date": tweet.created_at,
+        "timestamp": new Date(tweet.created_at).getTime(),
+        "date": moment(tweet.created_at).format("DD.MM.YYYY HH:mm:ss"),
         "text": tweet.text,
         "source": tweet.source,
         "user": {

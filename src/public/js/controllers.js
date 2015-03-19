@@ -12,7 +12,6 @@
 
             $scope.$on("socket:tweet", function (ev, data) {
                 $scope.tweets.push(data);
-                $scope.$apply();
             });
         }
     ]);
