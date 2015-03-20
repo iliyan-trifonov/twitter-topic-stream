@@ -45,3 +45,14 @@ exports.setSearch = function (search) {
     assignEvent();
     console.log("set new search = " + search);
 };
+
+exports.toggleStream = function (command) {
+    if ("start" === command) {
+        stream.start();
+        console.log("stream started");
+    } else if ("stop" === command) {
+        stream.stop();
+        console.log("stream stopped");
+    }
+};
+

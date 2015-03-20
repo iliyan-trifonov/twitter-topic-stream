@@ -11,7 +11,9 @@
             <div>
                 <input type="text" ng-value="search" ng-model="search">
                 <button ng-click="updateSearch()">Update</button>
-                <span ng-bind="'Updated'"
+                <button ng-click="toggleStream()"
+                        ng-bind="toggleStreamButtonTxt">Stop</button>
+                <span ng-bind="messageTxt"
                       class="updated"
                       ng-class="{'updated-anim': updated}"></span>
             </div>

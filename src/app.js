@@ -17,6 +17,7 @@ app.use(require('body-parser').json());
 
 app.get('/', routes.index);
 app.post('/tweets/search', routes.setSearch);
+app.put('/tweets/stream', routes.toggleStream);
 
 http.listen(3000, function () {
     console.log("listening on *:3000");

@@ -16,6 +16,14 @@
                             "method": "POST",
                             "cache": false
                         });
+                    },
+                    "toggleStream": function (command) {
+                        return $http({
+                            "url": "/tweets/stream",
+                            "data": { "command": command },
+                            "method": "PUT",
+                            "cache": false
+                        });
                     }
                 }
             };
