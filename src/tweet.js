@@ -1,7 +1,8 @@
 "use strict";
 
 var Twit = require("twit"),
-    moment = require("moment");
+    moment = require("moment"),
+    streamRunning = false;
 
 var T = new Twit({
     consumer_key: "yV0MmRg98kaiwuruZqe7613aL",
@@ -36,6 +37,7 @@ function assignEvent () {
 exports.stream = function (io) {
     socket = io;
     assignEvent();
+    streamRunning = true;
     return stream;
 };
 
@@ -43,16 +45,22 @@ exports.setSearch = function (search) {
     stream.stop();
     stream = T.stream("statuses/filter", {"track": search});
     assignEvent();
+    streamRunning = true;
     console.log("set new search = " + search);
 };
 
 exports.toggleStream = function (command) {
     if ("start" === command) {
         stream.start();
+        streamRunning = true;
         console.log("stream started");
     } else if ("stop" === command) {
         stream.stop();
+        streamRunning = false;
         console.log("stream stopped");
     }
 };
 
+exports.isRunning = function () {
+    return streamRunning;
+};

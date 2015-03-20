@@ -25,4 +25,5 @@ http.listen(3000, function () {
 
 var io = require("socket.io")(http);
 
+//TODO: check how to give new stream for new user, not one shared globally
 tweet.stream(io);

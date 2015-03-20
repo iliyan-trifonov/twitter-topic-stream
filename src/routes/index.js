@@ -3,7 +3,11 @@
 var tweet = require("../tweet");
 
 exports.index = function (req, res) {
-    res.render("index.html", { search: "linux", maxTweets: 20 });
+    res.render("index.html", {
+        search: "linux",
+        maxTweets: 20,
+        streamRunning: tweet.isRunning()
+    });
 };
 
 exports.setSearch = function (req, res) {

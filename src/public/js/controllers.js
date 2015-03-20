@@ -8,11 +8,12 @@
         "ngAnimate"
     ])
     .controller("IndexCtrl", [
-        '$scope', 'mySocket', 'maxTweets', 'search', 'Api',
-        function ($scope, mySocket, maxTweets, search, Api) {
+        '$scope', 'mySocket', 'maxTweets', 'search', 'Api', '$interval', '$timeout', 'streamRunning',
+        function ($scope, mySocket, maxTweets, search, Api, $interval, $timeout, streamRunning) {
 
-            var listen = true,
-                streamRunning = true;
+            var listen = streamRunning,
+                notifications = [],
+                displayingMessage = false;
 
             $scope.tweets = [];
 
@@ -39,6 +40,7 @@
                 Api.tweets.setSearch($scope.search)
                     .success(function () {
                         listen = true;
+                        streamRunning = true;
                         showMessage("Updated");
                     });
             };
@@ -52,18 +54,18 @@
                     listen = true;
                     command = "start";
                 }
-                console.log("command: " + command);
+                //console.log("command: " + command);
                 Api.tweets.toggleStream(command)
                     .success(function () {
                         streamRunning = ("start" === command);
-                        console.log("success: streamRunning = " + streamRunning + ", listen = " + listen);
+                        //console.log("success: streamRunning = " + streamRunning + ", listen = " + listen);
                     });
             };
 
             function showMessage(message)
             {
-                console.log("new message: " + message);
-                $scope.messageTxt = message;
+                //console.log("new message: " + message);
+                notifications.push(message);
             }
 
             function setButtonText(text)
@@ -71,21 +73,40 @@
                 $scope.toggleStreamButtonTxt = text;
             }
 
+            function streamRunningWatch (newVal) {
+                if (true === newVal) {
+                    $scope.toggleStreamButtonTxt = "Stop";
+                    showMessage("Started");
+                    setButtonText("Stop");
+                } else {
+                    $scope.toggleStreamButtonTxt = "Start";
+                    showMessage("Stopped");
+                    setButtonText("Start");
+                }
+            }
+
             $scope.$watch(function () {
                 return streamRunning;
             }, function (newVal, oldVal) {
                 if (newVal !== oldVal) {
-                    if (true === newVal) {
-                        $scope.toggleStreamButtonTxt = "Stop";
-                        showMessage("Started");
-                        setButtonText("Stop");
-                    } else {
-                        $scope.toggleStreamButtonTxt = "Start";
-                        showMessage("Stopped");
-                        setButtonText("Start");
-                    }
+                    streamRunningWatch(newVal);
                 }
             });
+
+            $interval(function () {
+                if (notifications.length > 0 && !displayingMessage) {
+                    displayingMessage = true;
+                    $scope.messageTxt = notifications.splice(0, 1);
+                    $timeout(function () {
+                        $scope.messageTxt = "";
+                        displayingMessage = false;
+                    }, 1E3);
+                }
+            }, 500);
+
+            if (!streamRunning) {
+                streamRunningWatch(1);
+            }
         }
     ]);
 
