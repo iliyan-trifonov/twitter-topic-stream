@@ -9,10 +9,11 @@
         function ($http) {
             return {
                 "tweets": {
-                    "list": function () {
+                    "setSearch": function (search) {
                         return $http({
-                            "url": "/tweets",
-                            "method": "GET",
+                            "url": "/tweets/search",
+                            "data": { "search": search },
+                            "method": "POST",
                             "cache": false
                         });
                     }

@@ -27,3 +27,21 @@ div.tweet img {
     float: left;
     margin-right: 5px;
 }
+
+span.updated {
+    opacity: 0;
+}
+
+span.updated-anim {
+    -webkit-animation: animate-updated 2s;
+    animation: animate-updated 2s;
+}
+
+@-webkit-keyframes animate-updated {
+    50%   { opacity: 1 }
+    100% { opacity: 0 }
+}
+@keyframes animate-updated {
+    50%   { opacity: 1 }
+    100% { opacity: 0 }
+}

@@ -7,7 +7,18 @@
     <body ng-app="TwitterTopicStream">
 
         <div ng-controller="IndexCtrl">
-            <div ng-repeat="tweet in tweets | orderBy: '-id' | limitTo: 30"
+
+            <div>
+                <input type="text" ng-value="search" ng-model="search">
+                <button ng-click="updateSearch()">Update</button>
+                <span ng-bind="'Updated'"
+                      class="updated"
+                      ng-class="{'updated-anim': updated}"></span>
+            </div>
+
+            <div>&nbsp;</div>
+
+            <div ng-repeat="tweet in tweets | orderBy: '-id' | limitTo: maxTweets"
                  ng-cloak
                  class="tweet ng-cloak"
             >
@@ -28,5 +39,14 @@
         <script type="text/javascript" src="/js/app.js"></script>
         <script type="text/javascript" src="/js/controllers.js"></script>
         <script type="text/javascript" src="/js/services.js"></script>
+        <script type="text/javascript">
+            (function (angular) {
+                "use strict";
+
+                angular.module("TwitterTopicStream.vars", [])
+                    .constant("search", "<%= search %>" || "linux")
+                    .constant("maxTweets", parseInt("<%= maxTweets %>", 10) || 20);
+            })(angular);
+        </script>
     </body>
 </html>
