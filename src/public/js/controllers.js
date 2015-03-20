@@ -19,7 +19,6 @@
             $scope.maxTweets = maxTweets;
             $scope.search = search;
             $scope.messageTxt = "";
-            $scope.updated = false;
             $scope.toggleStreamButtonTxt = "Stop";
 
             $scope.$on("socket:tweet", function (ev, data) {
@@ -37,42 +36,56 @@
             $scope.updateSearch = function () {
                 listen = false;
                 $scope.tweets = [];
-                $scope.messageTxt = "";
-                $scope.updated = false;
-                streamRunning = false;
                 Api.tweets.setSearch($scope.search)
                     .success(function () {
                         listen = true;
-                        $scope.messageTxt = "Updated";
-                        $scope.updated = true;
-                        $scope.toggleStreamButtonTxt = "Stop";
-                        streamRunning = true;
+                        showMessage("Updated");
                     });
             };
 
             $scope.toggleStream = function () {
-                var command = "", message = "", button = "";
-                $scope.updated = false;
+                var command;
                 if (true === streamRunning) {
-                    streamRunning = false;
-                    command = "stop";
                     listen = false;
-                    message = "Stopped";
-                    button = "Start";
+                    command = "stop";
                 } else {
-                    streamRunning = true;
-                    command = "start";
                     listen = true;
-                    message = "Started";
-                    button = "Stop";
+                    command = "start";
                 }
+                console.log("command: " + command);
                 Api.tweets.toggleStream(command)
                     .success(function () {
-                        $scope.toggleStreamButtonTxt = button;
-                        $scope.messageTxt = message;
-                        $scope.updated = true;
+                        streamRunning = ("start" === command);
+                        console.log("success: streamRunning = " + streamRunning + ", listen = " + listen);
                     });
             };
+
+            function showMessage(message)
+            {
+                console.log("new message: " + message);
+                $scope.messageTxt = message;
+            }
+
+            function setButtonText(text)
+            {
+                $scope.toggleStreamButtonTxt = text;
+            }
+
+            $scope.$watch(function () {
+                return streamRunning;
+            }, function (newVal, oldVal) {
+                if (newVal !== oldVal) {
+                    if (true === newVal) {
+                        $scope.toggleStreamButtonTxt = "Stop";
+                        showMessage("Started");
+                        setButtonText("Stop");
+                    } else {
+                        $scope.toggleStreamButtonTxt = "Start";
+                        showMessage("Stopped");
+                        setButtonText("Start");
+                    }
+                }
+            });
         }
     ]);
 

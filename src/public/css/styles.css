@@ -28,13 +28,9 @@ div.tweet img {
     margin-right: 5px;
 }
 
-span.updated {
-    opacity: 0;
-}
-
-span.updated-anim {
-    -webkit-animation: animate-updated 2s;
-    animation: animate-updated 2s;
+span.updated.ng-hide-remove {
+    -webkit-transition: animate-updated 2s;
+    transition: animate-updated 2s;
 }
 
 @-webkit-keyframes animate-updated {
