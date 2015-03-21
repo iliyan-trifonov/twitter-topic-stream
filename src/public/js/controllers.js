@@ -22,6 +22,17 @@
             $scope.messageTxt = "";
             $scope.toggleStreamButtonTxt = "Stop";
 
+            $scope.$on("socket:error", function (ev, data) {
+                streamRunning = false;
+                listen = false;
+                console.log("stream error", data);
+            });
+
+            $scope.$on("socket:tweetstarted", function (ev, data) {
+                streamRunning = true;
+                listen = true;
+            });
+
             $scope.$on("socket:tweet", function (ev, data) {
                 if (!listen) {
                     return;
