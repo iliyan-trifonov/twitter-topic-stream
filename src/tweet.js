@@ -1,31 +1,35 @@
 "use strict";
 
 var Twit = require("twit"),
-    moment = require("moment");
+    moment = require("moment"),
+    config = require("../config/config.json");
 
 var T = new Twit({
-    consumer_key: "yV0MmRg98kaiwuruZqe7613aL",
-    consumer_secret: "C48W4eAGfAi6Q0vfplrcUI85F7dwIQ7bkZbDqZ2jfWcLEwkPry",
-    access_token: "68644911-imLxX2tekVg0I7r7QG7B2Cof5I0dy7DNiXvDli7c6",
-    access_token_secret: "V21qUsOoxHC7uVtjGpRgFxDPtQVcI5gIMIOtueZP4gqOe"
+    consumer_key: config.twitter.consumer_key,
+    consumer_secret: config.twitter.consumer_secret,
+    access_token: config.twitter.access_token,
+    access_token_secret: config.twitter.access_token_secret
 });
 
 var clients = [];
 
 function initStream(sid, search) {
+    console.log("initStream("+sid+", "+search+")");
     var stream = getStreamByClient(sid);
     var socket = getSocketByClient(sid);
+    if (!socket) {
+        return;
+    }
     if (!search) {
-        search = "linux";
+        search = config.search;
     }
     if (stream) {
         stream.stop();
-        stream.close();
     }
     stream = T.stream("statuses/filter", {"track": search});
     clients[sid].stream = stream;
-    socket.emit('tweetstarted', '1');
     stream.on("tweet", function (tweet) {
+        console.log("clients num = " + clients.length);
         var result = {
             "id": tweet.id_str,
             "date": moment(tweet.created_at).format("DD.MM.YYYY HH:mm:ss"),
@@ -47,8 +51,8 @@ var cookie = require("cookie");
 var cookieParser = require("cookie-parser");
 
 exports.init = function (io) {
-    io.use(function (socket, next) {
-        var req = socket.request;
+    io.use(function (handshake, next) {
+        var req = handshake.request;
         if (req.headers.cookie) {
             var cookies = cookie.parse(req.headers.cookie);
             req.sessionID = cookieParser.signedCookie(
@@ -57,7 +61,8 @@ exports.init = function (io) {
             );
             next();
         } else {
-            next(new Error('not authorized'));
+            console.log('Not authorized!');
+            next(new Error('Not authorized!'));
         }
     });
 
@@ -73,6 +78,7 @@ exports.init = function (io) {
             "socket": socket,
             "streamRunning": false
         };
+        socket.emit('tweetstarted', '1');
 
         initStream(socket.request.sessionID);
 
@@ -89,21 +95,27 @@ exports.init = function (io) {
 
 function getStreamByClient(sid)
 {
-    return (clients.indexOf(sid) !== -1 && clients[sid].stream) || null;
+    return ("undefined" !== typeof clients[sid] && clients[sid].stream) || null;
 }
 
 function getSocketByClient(sid)
 {
-    return clients[sid].socket;
+    return ("undefined" !== typeof clients[sid] && clients[sid].socket) || null;
 }
 
 exports.setSearch = function (sid, search) {
+    if ("undefined" === typeof clients[sid]) {
+        return;
+    }
     initStream(sid, search);
     console.log("new search = " + search);
 };
 
 exports.toggleStream = function (sid, command) {
     var stream = getStreamByClient();
+    if (!stream) {
+        return;
+    }
     if ("start" === command) {
         stream.start();
         clients[sid].streamRunning = true;
@@ -116,5 +128,5 @@ exports.toggleStream = function (sid, command) {
 };
 
 exports.isRunning = function (sid) {
-    return (clients.indexOf(sid) !== -1 && true === clients[sid].streamRunning) || false;
+    return ("undefined" !== typeof clients[sid] && true === clients[sid].streamRunning) || false;
 };

@@ -1,10 +1,11 @@
 "use strict";
 
-var tweet = require("../tweet");
+var tweet = require("../tweet"),
+    config = require("../../config/config.json");
 
 exports.index = function (req, res) {
     res.render("index.html", {
-        search: "linux",
+        search: config.search,
         maxTweets: 20,
         streamRunning: tweet.isRunning(req.sessionID)
     });
