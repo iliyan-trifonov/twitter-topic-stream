@@ -11,7 +11,12 @@ var T = new Twit({
     access_token_secret: config.twitter.access_token_secret
 });
 
-var clients = [];
+var clients = {};
+
+var stats = {
+    "tweetsFirst": null,
+    "tweetsCount": 0
+};
 
 function initStream(sid, search) {
     console.log("initStream("+sid+", "+search+")");
@@ -29,7 +34,7 @@ function initStream(sid, search) {
     stream = T.stream("statuses/filter", {"track": search});
     clients[sid].stream = stream;
     stream.on("tweet", function (tweet) {
-        console.log("clients num = " + clients.length);
+        console.log("clients num = " + Object.keys(clients).length);
         var result = {
             "id": tweet.id_str,
             "date": moment(tweet.created_at).format("DD.MM.YYYY HH:mm:ss"),
@@ -43,14 +48,18 @@ function initStream(sid, search) {
             "url": "https://twitter.com/statuses/" + tweet.id_str
         };
         console.log(moment().format("DD.MM.YYYY HH:mm:ss") + " new tweet for '"+search+"'");
+        //TODO: put it in queue and pop every second only
         socket.emit('tweet', result);
+        sendTweetStats(1);
     });
 }
 
 var cookie = require("cookie");
 var cookieParser = require("cookie-parser");
+var socket;
 
 exports.init = function (io) {
+    socket = io;
     io.use(function (handshake, next) {
         var req = handshake.request;
         if (req.headers.cookie) {
@@ -59,6 +68,7 @@ exports.init = function (io) {
                 cookies['connect.sid'],
                 "SECRET"
             );
+            console.log("authorized");
             next();
         } else {
             console.log('Not authorized!');
@@ -78,7 +88,10 @@ exports.init = function (io) {
             "socket": socket,
             "streamRunning": false
         };
+        console.log("clients num become: " + Object.keys(clients).length);
         socket.emit('tweetstarted', '1');
+        sendClientsNum(io);
+        sendTweetStats(0);
 
         initStream(socket.request.sessionID);
 
@@ -88,19 +101,58 @@ exports.init = function (io) {
                 socket.request.sessionID +
                 ' disconnected!'
             );
+
+            removeClient(socket.request.sessionID);
+            sendClientsNum(io);
         });
     });
 
 };
 
+function sendTweetStats(newtweets)
+{
+    if ("undefined" !== typeof newtweets) {
+        stats.tweetsCount += newtweets;
+        if (!stats.tweetsFirst) {
+            stats.tweetsFirst = moment().format("DD.MM.YYYY HH:mm:ss");
+        }
+    }
+    socket.emit("tweetscount", stats.tweetsCount);
+    socket.emit("tweetsfirst", stats.tweetsFirst);
+}
+
+function removeClient(sid)
+{
+    var client = (
+        "undefined" !== typeof clients[sid] &&
+        clients[sid]
+        ) || null;
+    if (client) {
+        client.stream.stop();
+        delete clients[sid];
+    }
+    console.log("client " + sid + " deleted");
+}
+
+function sendClientsNum(io)
+{
+    io.emit("tweetsclients", Object.keys(clients).length);
+}
+
 function getStreamByClient(sid)
 {
-    return ("undefined" !== typeof clients[sid] && clients[sid].stream) || null;
+    return (
+        "undefined" !== typeof clients[sid] &&
+        clients[sid].stream
+        ) || null;
 }
 
 function getSocketByClient(sid)
 {
-    return ("undefined" !== typeof clients[sid] && clients[sid].socket) || null;
+    return (
+        "undefined" !== typeof clients[sid] &&
+        clients[sid].socket
+        ) || null;
 }
 
 exports.setSearch = function (sid, search) {
@@ -112,21 +164,26 @@ exports.setSearch = function (sid, search) {
 };
 
 exports.toggleStream = function (sid, command) {
-    var stream = getStreamByClient();
+    console.log("toggleStream("+sid+", "+command+") called");
+    var stream = getStreamByClient(sid);
     if (!stream) {
+        console.log("stream is false, returning");
         return;
     }
     if ("start" === command) {
         stream.start();
         clients[sid].streamRunning = true;
-        console.log("stream started");
+        console.log("stream "+sid+" started");
     } else if ("stop" === command) {
         stream.stop();
         clients[sid].streamRunning = false;
-        console.log("stream stopped");
+        console.log("stream "+sid+" stopped");
     }
 };
 
 exports.isRunning = function (sid) {
-    return ("undefined" !== typeof clients[sid] && true === clients[sid].streamRunning) || false;
+    return (
+        "undefined" !== typeof clients[sid] &&
+        true === clients[sid].streamRunning
+        ) || false;
 };

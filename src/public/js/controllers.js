@@ -28,6 +28,16 @@
                 console.log("stream error", data);
             });
 
+            $scope.$on("socket:tweetsclients", function (ev, data) {
+                $scope.tweetsClients = data;
+            });
+            $scope.$on("socket:tweetsfirst", function (ev, data) {
+                $scope.tweetsFirst = data;
+            });
+            $scope.$on("socket:tweetscount", function (ev, data) {
+                $scope.tweetsCount = data;
+            });
+
             $scope.$on("socket:tweetstarted", function (ev, data) {
                 streamRunning = true;
                 listen = true;

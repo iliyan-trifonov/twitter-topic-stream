@@ -9,6 +9,9 @@
         <div ng-controller="IndexCtrl">
 
             <div ng-cloak>
+                Clients online: <span ng-bind="tweetsClients"></span> |
+                First tweet: <span ng-bind="tweetsFirst"></span> |
+                Tweets sent: <span ng-bind="tweetsCount"></span><br/>
                 <input type="text" ng-value="search" ng-model="search">
                 <button ng-click="updateSearch()">Update</button>
                 <button ng-click="toggleStream()"

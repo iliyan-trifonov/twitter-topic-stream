@@ -31,8 +31,11 @@
     ])
     .factory("mySocket", function (socketFactory) {
         var mySocket = socketFactory();
-        mySocket.forward("tweetstarted");
         mySocket.forward("tweet");
+        mySocket.forward("tweetstarted");
+        mySocket.forward("tweetsclients");
+        mySocket.forward("tweetsfirst");
+        mySocket.forward("tweetscount");
         mySocket.forward("error");
         return mySocket;
     });
