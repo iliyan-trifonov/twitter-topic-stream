@@ -56,6 +56,8 @@ function initStream(sid, search) {
             sendTweetStats(1);
         });
 
+        clients[sid].socket.emit('tweetStarted', '1');
+
         stream.on("disconnect", function (disconnectMessage) {
             var msg = "stream disconnected: " + disconnectMessage;
             console.log(msg);
@@ -65,7 +67,10 @@ function initStream(sid, search) {
         clients[sid].stream = stream;
     } else {
         console.log("reusing the old stream");
-        stream.start();
+        if (clients[sid].streamRunning) {
+            stream.start();
+            clients[sid].socket.emit('tweetStarted', '1');
+        }
     }
 }
 
@@ -137,8 +142,6 @@ exports.init = function (io, sessionStore) {
 
             initStream(socket.request.sessionID);
         }
-
-        socket.emit('tweetStarted', '1');
 
         sendClientsNum();
         sendTweetStats();
