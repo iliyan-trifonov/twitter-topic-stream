@@ -2,7 +2,11 @@
 
 var Twit = require("twit"),
     moment = require("moment"),
-    config = require("../config/config.json");
+    config = require("../config/config.json"),
+    cookie = require("cookie"),
+    cookieParser = require("cookie-parser"),
+    socketio,
+    sessionStore;
 
 var T = new Twit({
     consumer_key: config.twitter.consumer_key,
@@ -20,24 +24,20 @@ var stats = {
 
 function initStream(sid, search) {
     console.log("initStream("+sid+", "+search+") called");
-    var stream = getStreamByClient(sid);
-    var socket = getSocketByClient(sid);
-    if (!socket) {
-        console.log("no socket for this client!");
-        return;
-    }
+    var client = getClientBySid(sid);
+    var stream = client.stream;
     search = search || config.search;
-    /*if (stream) {
-        stream.stop();
-        //TODO: check for better Twit cleanup
-        delete clients[sid].stream;
-    }*/
-    if (!stream || search !== clients[sid].search) {
+    if (!stream || search !== client.search) {
         console.log("creating a new stream");
+        if (stream) {
+            stream.stop();
+        }
         stream = T.stream("statuses/filter", {"track": search});
 
+        client.streamRunning = true;
+        client.search = search;
+
         stream.on("tweet", function (tweet) {
-            console.log("clients num = " + Object.keys(clients).length);
             var result = {
                 "id": tweet.id_str,
                 "date": moment(tweet.created_at).format("DD.MM.YYYY HH:mm:ss"),
@@ -56,7 +56,7 @@ function initStream(sid, search) {
             sendTweetStats(1);
         });
 
-        clients[sid].socket.emit('tweetStarted', '1');
+        client.socket.emit('tweetStarted', '1');
 
         stream.on("disconnect", function (disconnectMessage) {
             var msg = "stream disconnected: " + disconnectMessage;
@@ -64,107 +64,49 @@ function initStream(sid, search) {
             clients[sid].socket.emit("error", msg);
         });
 
-        clients[sid].stream = stream;
+        stream.on("limit", function (limitMessage) {
+            var msg = "stream limit: " + limitMessage;
+            console.log(msg);
+            clients[sid].socket.emit("info", msg);
+        });
+
+        stream.on("reconnect", function (req, res, connectInterval) {
+            var msg = "stream reconnect after: " + connectInterval/1000 + " seconds";
+            console.log(msg);
+            clients[sid].socket.emit("info", msg);
+        });
+
+        stream.on("connect", function (req) {
+            var msg = "stream connect";
+            console.log(msg);
+            //clients[sid].socket.emit("error", msg);
+        });
+
+/*
+        stream.on("connected", function (res) {
+            var msg = "stream connected";
+            console.log(msg);
+            //clients[sid].socket.emit("error", msg);
+        });
+*/
+
+        stream.on("warning", function (warning) {
+            var msg = "stream warning: " + warning;
+            console.log(msg);
+            clients[sid].socket.emit("error", msg);
+        });
+
+        client.stream = stream;
     } else {
         console.log("reusing the old stream");
-        if (clients[sid].streamRunning) {
+        console.log("old stream running: " + clients[sid].streamRunning);
+        //if not stopped
+        if (client.streamRunning) {
             stream.start();
-            clients[sid].socket.emit('tweetStarted', '1');
+            client.socket.emit('tweetStarted', '1');
         }
     }
 }
-
-var cookie = require("cookie");
-var cookieParser = require("cookie-parser");
-var socketio;
-
-exports.init = function (io, sessionStore) {
-    socketio = io;
-    socketio.use(function (handshake, next) {
-        var req = handshake.request;
-        if (req.headers.cookie) {
-            var cookies = cookie.parse(req.headers.cookie);
-            //TODO: look for examples with signedCookie() and compare
-            var sid = cookieParser.signedCookie(
-                cookies[config.session_key],
-                config.secret
-            );
-            sessionStore.length(function (err, len) {
-                console.log("sessions length = " + len);
-            });
-            sessionStore.get(sid, function (err, session) {
-                if (err || !session) {
-                    console.log(err, session);
-                    console.log("session with sid " + sid + " not found!");
-                    next(new Error("Invalid session id!"));
-                } else {
-                    console.log("authorized");
-                    req.sessionID = sid;
-                    next();
-                }
-            });
-        } else {
-            console.log('Not authorized!');
-            next(new Error('Not authorized!'));
-        }
-    });
-
-    socketio.on('connection', function(socket) {
-        console.log(
-            'A socketio with sessionID ' +
-            socket.request.sessionID +
-            ' connected!'
-        );
-
-        if ("undefined" !== typeof clients[socket.request.sessionID]) {
-            console.log("old client detected");
-            var cl = clients[socket.request.sessionID];
-            if (cl.cleanup) {
-                clearTimeout(cl.cleanup);
-                delete cl.cleanup;
-                console.log("removed cleanup for client " + socket.request.sessionID);
-            }
-            //delete clients[socket.request.sessionID].socket;
-            clients[socket.request.sessionID].socket = socket;
-            //toggleStream(socket.request.sessionID, "start");
-            initStream(socket.request.sessionID, cl.search);
-        } else {
-            console.log("new client detected");
-            clients[socket.request.sessionID] = {
-                "stream": null,
-                "socket": socket,
-                "streamRunning": false,
-                "search": ""
-            };
-
-            //TODO: use socket.clients length
-            console.log("clients num become: " + Object.keys(clients).length);
-
-            initStream(socket.request.sessionID);
-        }
-
-        sendClientsNum();
-        sendTweetStats();
-
-
-        socket.on('disconnect', function () {
-            console.log(
-                'A socket with sessionID ' +
-                socket.request.sessionID +
-                ' disconnected!'
-            );
-
-            clients[socket.request.sessionID].stream.stop();
-            //cleanup after some small period
-            clients[socket.request.sessionID].cleanup = setTimeout(function () {
-                removeClient(socket.request.sessionID);
-                sendClientsNum();
-            }, 6E3);
-
-        });
-    });
-
-};
 
 function sendTweetStats(newtweets)
 {
@@ -177,8 +119,7 @@ function sendTweetStats(newtweets)
     socketio.emit("tweetStats", stats);
 }
 
-function removeClient(sid)
-{
+function removeClient(sid) {
     var client = (
         "undefined" !== typeof clients[sid] &&
         clients[sid]
@@ -196,43 +137,11 @@ function sendClientsNum()
     socketio.emit("tweetClients", Object.keys(clients).length);
 }
 
-function getStreamByClient(sid)
-{
-    return (
-        "undefined" !== typeof clients[sid] &&
-        clients[sid].stream
-        ) || null;
-}
-
-function getSocketByClient(sid)
-{
-    return (
-        "undefined" !== typeof clients[sid] &&
-        clients[sid].socket
-        ) || null;
-}
-
-exports.setSearch = function (sid, search) {
-    if ("undefined" === typeof clients[sid]) {
-        return;
-    }
-    console.log("new search = " + search);
-    initStream(sid, search);
-    clients[sid].search = search;
-};
-
-exports.getSearch = function (sid) {
-    return (
-        "undefined" !== typeof clients[sid] &&
-        clients[sid].search
-        ) || false;
-};
-
-var toggleStream = function (sid, command) {
+function toggleStream(sid, command) {
     console.log("toggleStream("+sid+", "+command+") called");
-    var stream = getStreamByClient(sid);
+    var stream = getClientBySid(sid).stream;
     if (!stream) {
-        console.log("stream is false, returning");
+        console.log("no stream set for this client!");
         return;
     }
     if ("start" === command) {
@@ -244,6 +153,111 @@ var toggleStream = function (sid, command) {
         clients[sid].streamRunning = false;
         console.log("stream "+sid+" stopped");
     }
+}
+
+function sessionAuth(handshake, next) {
+    var req = handshake.request;
+    if (req.headers.cookie) {
+        var cookies = cookie.parse(req.headers.cookie);
+        //TODO: look for examples with signedCookie() and compare
+        var sid = cookieParser.signedCookie(
+            cookies[config.session_key],
+            config.secret
+        );
+        sessionStore.get(sid, function (err, session) {
+            if (err || !session) {
+                console.log(err, session);
+                console.log("session with sid " + sid + " not found!");
+                next(new Error("Invalid session id!"));
+            } else {
+                console.log("authorized");
+                req.sessionID = sid;
+                next();
+            }
+        });
+    } else {
+        console.log('Not authorized!');
+        next(new Error('Not authorized!'));
+    }
+}
+
+function getClientBySid(sid) {
+    return "undefined" !== typeof clients[sid] ?
+        clients[sid] :
+        null;
+}
+
+function removeClientCleanup(sid) {
+    var client = getClientBySid(sid);
+    if (!client) {
+        return;
+    }
+    if (client.cleanup) {
+        clearTimeout(client.cleanup);
+        delete client.cleanup;
+        console.log("removed cleanup for client " + sid);
+    }
+}
+
+exports.init = function (io, store) {
+    socketio = io;
+    sessionStore = store;
+
+    socketio.use(sessionAuth);
+
+    socketio.on('connection', function(socket) {
+        console.log("socket client connected");
+
+        var client = getClientBySid(socket.request.sessionID);
+
+        if (client) {
+            console.log("old client detected");
+            removeClientCleanup(socket.request.sessionID);
+            //client socket changes after refresh
+            clients[socket.request.sessionID].socket = socket;
+            initStream(socket.request.sessionID, client.search);
+        } else {
+            console.log("new client detected");
+            clients[socket.request.sessionID] = {
+                "stream": null,
+                "socket": socket,
+                "streamRunning": false,
+                "search": null
+            };
+            initStream(socket.request.sessionID);
+        }
+
+        socket.on('disconnect', function () {
+            console.log("socket client disconnected");
+            //needs to get the client var again
+            var client = getClientBySid(socket.request.sessionID);
+            //stop stream and delete client after some time
+            client.stream.stop();
+            client.cleanup = setTimeout(function () {
+                removeClient(socket.request.sessionID);
+                sendClientsNum();
+            }, 60E3);//60 sec.
+        });
+
+        sendClientsNum();
+        sendTweetStats();
+    });
+
+};
+
+exports.setSearch = function (sid, search) {
+    if ("undefined" === typeof clients[sid]) {
+        return;
+    }
+    console.log("new search = " + search);
+    initStream(sid, search);
+};
+
+exports.getSearch = function (sid) {
+    return (
+        "undefined" !== typeof clients[sid] &&
+        clients[sid].search
+        ) || false;
 };
 
 exports.toggleStream = toggleStream;

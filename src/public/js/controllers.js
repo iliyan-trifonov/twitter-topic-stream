@@ -22,6 +22,7 @@
             $scope.messageTxt = "";
             $scope.toggleStreamButtonTxt = "Pause";
             $scope.alert = "";
+            $scope.info = "";
 
             $scope.pageRefresh = function () {
                 $window.location.reload();
@@ -33,8 +34,14 @@
             $scope.$on("socket:error", function (ev, data) {
                 streamRunning = false;
                 listen = false;
-                console.error("stream error: ", data);
                 $scope.alert = "Stream error: " + data;
+            });
+
+            $scope.$on("socket:info", function (ev, data) {
+                $scope.info = "Stream message: " + data;
+                $timeout(function () {
+                    $scope.info = "";
+                }, 5E3);
             });
 
             $scope.$on("socket:tweetClients", function (ev, data) {
@@ -85,17 +92,14 @@
                     listen = true;
                     command = "start";
                 }
-                //console.log("command: " + command);
                 Api.tweets.toggleStream(command)
                     .success(function () {
                         streamRunning = ("start" === command);
-                        //console.log("success: streamRunning = " + streamRunning + ", listen = " + listen);
                     });
             };
 
             function showMessage(message)
             {
-                //console.log("new message: " + message);
                 notifications.push(message);
             }
 

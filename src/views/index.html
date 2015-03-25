@@ -42,6 +42,8 @@
                     </div>
                 </div>
 
+                <div ng-if="info" ng-bind="info" class="info"></div>
+
             </div>
 
             <div>&nbsp;</div>
@@ -74,7 +76,7 @@
                 "use strict";
 
                 angular.module("TwitterTopicStream.vars", [])
-                    .constant("search", "<%= search %>" || "linux")
+                    .constant("search", "<%= search %>")
                     .constant("maxTweets", <%= maxTweets %>)
                     .value("streamRunning", <%= streamRunning %>);
             })(angular);

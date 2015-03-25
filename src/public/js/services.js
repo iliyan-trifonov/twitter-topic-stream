@@ -37,6 +37,7 @@
         mySocket.forward("tweetClients");
         mySocket.forward("tweetStats");
         mySocket.forward("error");
+        mySocket.forward("info");
         //TODO: forward connection error
         //TODO: like mySocket.on("error", ...)
         //TODO: separate error messages for stream and socket errors

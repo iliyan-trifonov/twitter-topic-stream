@@ -6,7 +6,7 @@ var tweet = require("../tweet"),
 exports.index = function (req, res) {
     res.render("index.html", {
         search: tweet.getSearch(req.sessionID) || config.search,
-        maxTweets: 20,
+        maxTweets: config.maxTweets,
         streamRunning: tweet.isRunning(req.sessionID)
     });
 };

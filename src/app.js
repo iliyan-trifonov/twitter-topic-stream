@@ -2,7 +2,6 @@
 
 var config = require("../config/config.json"),
     express = require("express"),
-//    favicon = require("serve-favicon"),
     routes = require("./routes"),
     path = require("path"),
     tweet = require("./tweet"),
@@ -15,7 +14,6 @@ var app = express();
 var http = require("http").Server(app);
 var io = require("socket.io")(http);
 
-//app.use(favicon());
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.engine('html', require('ejs').renderFile);
