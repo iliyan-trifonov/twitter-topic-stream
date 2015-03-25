@@ -31,12 +31,15 @@
     ])
     .factory("mySocket", function (socketFactory) {
         var mySocket = socketFactory();
+        //TODO: on disconnect: stop listen and isrunning = false in the controller
         mySocket.forward("tweet");
-        mySocket.forward("tweetstarted");
-        mySocket.forward("tweetsclients");
-        mySocket.forward("tweetsfirst");
-        mySocket.forward("tweetscount");
+        mySocket.forward("tweetStarted");
+        mySocket.forward("tweetClients");
+        mySocket.forward("tweetStats");
         mySocket.forward("error");
+        //TODO: forward connection error
+        //TODO: like mySocket.on("error", ...)
+        //TODO: separate error messages for stream and socket errors
         return mySocket;
     });
 

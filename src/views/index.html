@@ -9,14 +9,39 @@
         <div ng-controller="IndexCtrl">
 
             <div ng-cloak>
-                Clients online: <span ng-bind="tweetsClients"></span> |
-                First tweet: <span ng-bind="tweetsFirst"></span> |
-                Tweets sent: <span ng-bind="tweetsCount"></span><br/>
-                <input type="text" ng-value="search" ng-model="search">
+
+                <div class="status">
+                    <span ng-if="tweetsClients">
+                        Users online: {{tweetsClients}}
+                    </span>
+                    <span ng-if="tweetsFirst">
+                        | First tweet: {{tweetsFirst}}
+                    </span>
+                    <span ng-if="tweetsCount">
+                        | All tweets received: {{tweetsCount}}
+                    </span>
+                </div>
+
+                Search for: <input type="text" ng-value="search" ng-model="search">
+                <!--languages:-->
+                <select>
+                    <option>All</option>
+                </select>
                 <button ng-click="updateSearch()">Update</button>
                 <button ng-click="toggleStream()"
                         ng-bind="toggleStreamButtonTxt">Stop</button>
                 <notification message="messageTxt" ng-if='messageTxt'></notification>
+
+                <div ng-if="alert" class="alert">
+                    <div class="header" ng-bind="alert"></div>
+                    <div class="subtext">
+                        Please try again by
+                        <span ng-click="pageRefresh()" class="refresh_link">
+                            refreshing the page
+                        </span>.
+                    </div>
+                </div>
+
             </div>
 
             <div>&nbsp;</div>

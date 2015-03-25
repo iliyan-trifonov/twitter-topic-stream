@@ -1,3 +1,7 @@
+* {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
     display: none !important;
 }
@@ -44,4 +48,29 @@ span.notification.ng-enter {
 @keyframes notif-anim {
     50%   { opacity: 1 }
     100% { opacity: 0 }
+}
+
+div.alert {
+    margin: 10px;
+    text-align: center;
+}
+
+div.alert div.header {
+    color: red;
+    font-weight: bold;
+    font-size: large;
+}
+
+div.alert div.subtext {
+    font-size: 12px;
+}
+
+div.alert span.refresh_link {
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+div.status {
+    float: right;
 }

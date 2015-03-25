@@ -8,8 +8,8 @@
         "ngAnimate"
     ])
     .controller("IndexCtrl", [
-        '$scope', 'mySocket', 'maxTweets', 'search', 'Api', '$interval', '$timeout', 'streamRunning',
-        function ($scope, mySocket, maxTweets, search, Api, $interval, $timeout, streamRunning) {
+        '$scope', '$window', 'mySocket', 'maxTweets', 'search', 'Api', '$interval', '$timeout', 'streamRunning',
+        function ($scope, $window, mySocket, maxTweets, search, Api, $interval, $timeout, streamRunning) {
 
             var listen = streamRunning,
                 notifications = [],
@@ -20,25 +20,32 @@
             $scope.maxTweets = maxTweets;
             $scope.search = search;
             $scope.messageTxt = "";
-            $scope.toggleStreamButtonTxt = "Stop";
+            $scope.toggleStreamButtonTxt = "Pause";
+            $scope.alert = "";
 
+            $scope.pageRefresh = function () {
+                $window.location.reload();
+            };
+
+            //TODO: on disconnect: stop listen and isrunning = false in the controller
+
+            //TODO: separate error messages for stream and socket errors
             $scope.$on("socket:error", function (ev, data) {
                 streamRunning = false;
                 listen = false;
-                console.log("stream error", data);
+                console.error("stream error: ", data);
+                $scope.alert = "Stream error: " + data;
             });
 
-            $scope.$on("socket:tweetsclients", function (ev, data) {
+            $scope.$on("socket:tweetClients", function (ev, data) {
                 $scope.tweetsClients = data;
             });
-            $scope.$on("socket:tweetsfirst", function (ev, data) {
-                $scope.tweetsFirst = data;
-            });
-            $scope.$on("socket:tweetscount", function (ev, data) {
-                $scope.tweetsCount = data;
+            $scope.$on("socket:tweetStats", function (ev, data) {
+                $scope.tweetsFirst = data.tweetsFirst;
+                $scope.tweetsCount = data.tweetsCount;
             });
 
-            $scope.$on("socket:tweetstarted", function (ev, data) {
+            $scope.$on("socket:tweetStarted", function () {
                 streamRunning = true;
                 listen = true;
             });
@@ -47,17 +54,19 @@
                 if (!listen) {
                     return;
                 }
+
                 $scope.tweets.push(data);
                 var len = $scope.tweets.length;
                 if (len > maxTweets) {
-                    //or .splice(0, 1)
-                    $scope.tweets.splice(0, len - maxTweets);
+                    //$scope.tweets.splice(0, len - maxTweets);
+                    $scope.tweets.splice(0, 1);
                 }
             });
 
             $scope.updateSearch = function () {
                 listen = false;
                 $scope.tweets = [];
+
                 Api.tweets.setSearch($scope.search)
                     .success(function () {
                         listen = true;
@@ -68,6 +77,7 @@
 
             $scope.toggleStream = function () {
                 var command;
+
                 if (true === streamRunning) {
                     listen = false;
                     command = "stop";
@@ -96,12 +106,10 @@
 
             function streamRunningWatch (newVal) {
                 if (true === newVal) {
-                    $scope.toggleStreamButtonTxt = "Stop";
                     showMessage("Started");
-                    setButtonText("Stop");
+                    setButtonText("Pause");
                 } else {
-                    $scope.toggleStreamButtonTxt = "Start";
-                    showMessage("Stopped");
+                    showMessage("Paused");
                     setButtonText("Start");
                 }
             }

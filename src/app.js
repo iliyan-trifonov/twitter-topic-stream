@@ -1,24 +1,32 @@
 "use strict";
 
-var express = require('express'),
+var config = require("../config/config.json"),
+    express = require("express"),
+//    favicon = require("serve-favicon"),
     routes = require("./routes"),
     path = require("path"),
     tweet = require("./tweet"),
     session = require("express-session"),
+    memoryStore = session.MemoryStore,
+    sessionStore = new memoryStore(),
     cookieParser = require("cookie-parser");
 
 var app = express();
-
 var http = require("http").Server(app);
+var io = require("socket.io")(http);
 
+//app.use(favicon());
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.engine('html', require('ejs').renderFile);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(require('body-parser').json());
-app.use(cookieParser("SECRET"));
+app.use(cookieParser(config.secret));
 app.use(session({
-    secret: "SECRET",
+    secret: config.secret,
+    store: sessionStore,
+    //TODO: use it and also check how to decode it in tweet.js init
+    //cookie: { secure: true },
     resave: false,
     saveUninitialized: true
 }));
@@ -31,7 +39,4 @@ http.listen(3000, function () {
     console.log("listening on *:3000");
 });
 
-var io = require("socket.io")(http);
-
-//TODO: check how to give new stream for new user, not one shared globally
-tweet.init(io);
+tweet.init(io, sessionStore);
