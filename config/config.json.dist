@@ -7,6 +7,6 @@
   },
   "session_key": "connect.sid",
   "secret": "SECRET",
-  "search": "iliyan",
+  "search": "linux",
   "maxTweets": 20
 }
