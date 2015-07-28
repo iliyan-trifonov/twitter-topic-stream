@@ -138,7 +138,7 @@
             }, 500);
 
             if (!streamRunning) {
-                streamRunningWatch(1);
+                streamRunningWatch(true);
             }
         }
     ]);
