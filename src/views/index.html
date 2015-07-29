@@ -48,7 +48,7 @@
 
             <div>&nbsp;</div>
 
-            <div ng-repeat="tweet in tweets | orderBy: '-id' | limitTo: maxTweets"
+            <div ng-repeat="tweet in tweets | orderBy: '-id' | limitTo: maxTweets track by tweet.id"
                  ng-cloak
                  class="tweet ng-cloak"
             >
