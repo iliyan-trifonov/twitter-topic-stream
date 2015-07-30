@@ -20,7 +20,7 @@
             $scope.maxTweets = maxTweets;
             $scope.search = search;
             $scope.messageTxt = "";
-            $scope.toggleStreamButtonTxt = "Pause";
+            $scope.toggleStreamButtonTxt = streamRunning ? "Pause" : "Start";
             $scope.alert = "";
             $scope.info = "";
 
@@ -136,10 +136,6 @@
                     }, 1E3);
                 }
             }, 500);
-
-            if (!streamRunning) {
-                streamRunningWatch(true);
-            }
         }
     ]);
 
