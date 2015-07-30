@@ -3,17 +3,25 @@
 
     angular.module("TwitterTopicStream.directives", [])
         .directive("notification", [
-            '$timeout',
-            function ($timeout) {
+            function () {
                 return {
                     restrict: 'E',
                     replace: true,
                     scope: {
                         "message": '='
                     },
-                    template: "<span ng-bind='message' class='notification'></span>",
-                    link: function (scope, element, attrs) {
-                    }
+                    template: '<span ng-bind="message" class="notification"></span>'
+                };
+            }
+        ])
+        .directive("singleTweet", [
+            function () {
+                return {
+                    restrict: 'E',
+                    scope: {
+                        "tweet": '='
+                    },
+                    templateUrl: '/partials/directives/tweet.html'
                 };
             }
         ]);
