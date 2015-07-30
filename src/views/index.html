@@ -23,10 +23,6 @@
                 </div>
 
                 Search for: <input type="text" ng-value="search" ng-model="search">
-                <!--languages:-->
-                <select>
-                    <option>All</option>
-                </select>
                 <button ng-click="updateSearch()">Update</button>
                 <button ng-click="toggleStream()"
                         ng-bind="toggleStreamButtonTxt">Stop</button>
@@ -49,15 +45,8 @@
             <div>&nbsp;</div>
 
             <div ng-repeat="tweet in tweets | orderBy: '-id' | limitTo: maxTweets track by tweet.id"
-                 ng-cloak
-                 class="tweet ng-cloak"
-            >
-                <img ng-src="{{tweet.user.avatar}}" ng-show="tweet.user.avatar" />
-                Created at: <span ng-bind="tweet.date"></span><br/>
-                Text: <span ng-bind="tweet.text"></span><br/>
-                Source: <span ng-bind-html="tweet.source"></span><br/>
-                User: <span>{{tweet.user.name}}({{tweet.user.screen_name}})</span><br/>
-                <a ng-href="{{tweet.url}}" target="_blank">Tweet URL</a>
+                 class="tweet ng-cloak">
+                <single-tweet tweet="tweet"></single-tweet>
             </div>
         </div>
 
